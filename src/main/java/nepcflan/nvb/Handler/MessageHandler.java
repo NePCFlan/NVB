@@ -1,28 +1,32 @@
-package nepcflan.nvb;
+package nepcflan.nvb.Handler;
 
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 @Slf4j
-public class MyListener extends ListenerAdapter {
+public class MessageHandler extends ListenerAdapter {
+    //Configファイルからの読み込み＆定義
     private final String prefix;
     private final long admin;
 
-    public MyListener(String prefix, long admin) {
+    public MessageHandler(String prefix, long admin) {
         this.prefix = prefix;
         this.admin = admin;
     }
 
+    //コマンド受け付け
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor() == event.getJDA().getSelfUser() ||
-                event.getAuthor().isBot() ||
-                event.isWebhookMessage() ||
-                !event.getTextChannel().canTalk())
+        if (event.getAuthor() == event.getJDA().getSelfUser() ||//発言したユーザーが自分自身ではないか
+                event.getAuthor().isBot() ||//BOTではないか
+                event.isWebhookMessage() ||//WebhookMessageではないか
+                !event.getTextChannel().canTalk())//発言不可能なチャンネルか
             return;
 
         String raw = event.getMessage().getContentRaw();
@@ -71,6 +75,19 @@ public class MyListener extends ListenerAdapter {
             default:
                 event.getChannel().sendMessage("このコマンドは登録されていません！").queue();
                 break;
+        }
+    }
+
+    public void onGuildMemberJoin(GuildMemberJoinEvent event) {
+        String message = "%MENTION% さんようこそ！\n" +
+                "ほげほげ。\n" +
+                "ゆっくりしていってね！";
+        String rep = message.replace("%MENTION%", event.getMember().getAsMention());
+        for (TextChannel channel : event.getGuild().getTextChannels()) {
+            if (channel.canTalk()) {
+                channel.sendMessage(rep).queue();
+                break;
+            }
         }
     }
 }
